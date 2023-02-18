@@ -1,0 +1,198 @@
+import React, { useState } from "react";
+import { Grid, Paper, Avatar, TextField, Button } from "@material-ui/core";
+import AddCircleOutlineOutlinedIcon from "@material-ui/icons/AddCircleOutlineOutlined";
+import Box from "@material-ui/core/Box";
+import { useForm, Controller } from "react-hook-form";
+import { makeStyles } from "@material-ui/styles";
+import axios from "axios";
+import { useHistory } from "react-router-dom";
+import { ToastContainer, toast } from "material-react-toastify";
+import "material-react-toastify/dist/ReactToastify.css";
+
+const useStyles = makeStyles({
+  field: {
+    marginTop: 15,
+    marginBottom: 15,
+    display: "block",
+  },
+});
+
+export default function AddBlog() {
+  const classes = useStyles();
+  let history = useHistory();
+  const [files, setFiles] = useState(
+    "https://www.generationsforpeace.org/wp-content/uploads/2018/03/empty.jpg",
+  );
+
+  const paperStyle = { padding: "30px 20px", width: 600, margin: "30px auto" };
+  const headerStyle = { margin: 0 };
+  const avatarStyle = { backgroundColor: "#1bbd7e" };
+  const marginTop = { marginTop: 10 };
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+  const token = localStorage.getItem("id_token");
+
+  const onSubmit = (data) => {
+    const formData = new FormData();
+
+    formData.append("title", data.title);
+    formData.append("image", data.image);
+    formData.append("description", data.description);
+    formData.append("username", data.username);
+    formData.append("content", data.content);
+
+    console.log(formData);
+    console.log(formData.get("image"));
+    console.log(formData.get("title"));
+
+    axios
+      .post(
+        "http://localhost:8000/blog",
+
+        formData,
+
+        {
+          headers: { Authorization: `Basic ${token}` },
+        },
+      )
+      .then((response) => {
+        history.push("blogs");
+        toast.success("Blog Added");
+        console.log(response);
+        console.log("datas", response.data);
+      });
+  };
+
+  return (
+    <Grid>
+      <Paper elevation={15} style={paperStyle}>
+        <ToastContainer />
+        <Grid align="center">
+          <Avatar style={avatarStyle}>
+            <AddCircleOutlineOutlinedIcon />
+          </Avatar>
+          <h2 style={headerStyle}>Add Blog</h2>
+        </Grid>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Controller
+            name="title"
+            control={control}
+            defaultValue=""
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <TextField
+                className={classes.field}
+                label="Name"
+                value={value}
+                fullWidth
+                onChange={onChange}
+                error={!!error}
+                placeholder="Enter your Name"
+                helperText={error ? error.message : null}
+              />
+            )}
+            rules={{ required: "Username required" }}
+          />
+          <Controller
+            name="image"
+            control={control}
+            defaultValue=""
+            render={({ field: { onChange }, fieldState: { error } }) => (
+              <TextField
+                className={classes.field}
+                fullWidth
+                onChange={(e) => {
+                  onChange(e.target.files[0]);
+
+                  setFiles(e.target.files[0]);
+                  const reader = new FileReader();
+                  reader.addEventListener("load", () => {
+                    setFiles(reader.result);
+                  });
+                  reader.readAsDataURL(e.target.files[0]);
+                }}
+                error={!!error}
+                helperText={error ? error.message : null}
+                type="file"
+              />
+            )}
+            rules={{ required: "Image required" }}
+          />
+          <img src={files} id="img" width={90} height={90}></img>
+
+          <Controller
+            name="description"
+            control={control}
+            defaultValue=""
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <TextField
+                className={classes.field}
+                label="Description"
+                multiline
+                rows={3}
+                rowsMax={5}
+                value={value}
+                fullWidth
+                onChange={onChange}
+                error={!!error}
+                placeholder="Enter your description"
+                helperText={error ? error.message : null}
+              />
+            )}
+            rules={{ required: "Description required" }}
+          />
+          <Controller
+            name="content"
+            control={control}
+            defaultValue=""
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <TextField
+                className={classes.field}
+                label="Content"
+                value={value}
+                fullWidth
+                onChange={onChange}
+                error={!!error}
+                placeholder="Enter your Content"
+                helperText={error ? error.message : null}
+              />
+            )}
+            rules={{ required: "Content required" }}
+          />
+          <Controller
+            name="username"
+            control={control}
+            defaultValue=""
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <TextField
+                className={classes.field}
+                label="Username"
+                value={value}
+                fullWidth
+                onChange={onChange}
+                error={!!error}
+                placeholder="Enter your Username"
+                helperText={error ? error.message : null}
+              />
+            )}
+            rules={{ required: "Username required" }}
+          />
+
+          <Box display="flex" justifyContent="center">
+            <Button
+              style={marginTop}
+              type="submit"
+              variant="contained"
+              color="primary"
+            >
+              Add Blog
+            </Button>
+          </Box>
+        </form>
+      </Paper>
+    </Grid>
+  );
+}
